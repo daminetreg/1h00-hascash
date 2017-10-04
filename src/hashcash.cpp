@@ -86,24 +86,47 @@ void hashcash_gen(hashcash& hc) {
   std::srand(hc.date); // use current time as seed for random generator
   hc.counter = std::min<size_t>(std::rand(), counter_max);
 
+  int randomness = std::rand();
+  std::string randomness_buf(reinterpret_cast<const char*>(&randomness), sizeof randomness);
+  hc.randomness = "hello";//randomness_buf;//sha1::to_string(sha1::hash(randomness_buf));
+
   std::array<uint32_t, 5> hash;
   do {
-    int randomness = std::rand();
-    std::string randomness_buf(reinterpret_cast<const char*>(&randomness), sizeof randomness);
-    hc.randomness = randomness_buf;//sha1::to_string(sha1::hash(randomness_buf));
   
     hash = sha1::hash(hashcash_output(hc.date, hc.resource, hc.randomness, hc.counter));
+    std::cout << "My hash : " << sha1::to_string(hash) << std::endl; 
     std::cout << hashcash_output(hc.date, hc.resource, hc.randomness, hc.counter) << std::endl;
 
     std::srand(std::time(0));
-    hc.counter = (hc.counter == counter_max) ? 0 : std::min<size_t>(hc.counter + 1, counter_max);
-    
-    std::cout << "Current counter : " << hc.counter << std::endl;
-  } while ( (hash[4] & 0xFFFFF) != 0 );
+    if ( (hash[0] & 0xFFFFF000) != 0 ) {
+      hc.counter = (hc.counter == counter_max) ? 0 : std::min<size_t>(hc.counter + 1, counter_max);
+      std::cout << "Current counter : " << hc.counter << std::endl;
+    } else {
+      return;
+    }
+  } while ( true );
+}
+
+bool check_hashcash(const std::string& hashcash_str) {
+  std::array<uint32_t, 5> hash;
+  hash = sha1::hash(hashcash_str);
+  std::cout << "Hash we do compute : " << sha1::to_string(hash) << std::endl;
+  return ( (hash[0] & 0xFFFFF000) == 0 ); 
 }
 
 
 int main(int argc, char** argv) {
+  if (std::string(argv[1]) == "check") {
+    if (check_hashcash(argv[2])) {
+      std::cout << "It's a valid one !" << std::endl;
+      std::cout << "It's a valid one !" << std::endl;
+      std::cout << "It's a valid one !" << std::endl;
+    } else {
+      std::cout << "Sorry not good!";
+    }
+    return 0;
+  }
+
 	std::string a = "Franz jagt im komplett verwahrlosten Taxi quer durch Bayern";
 
   std::cout << base64::encode(a) << std::endl;
