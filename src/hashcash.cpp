@@ -94,13 +94,11 @@ void hashcash_gen(hashcash& hc) {
   do {
   
     hash = sha1::hash(hashcash_output(hc.date, hc.resource, hc.randomness, hc.counter));
-    std::cout << "My hash : " << sha1::to_string(hash) << std::endl; 
-    std::cout << hashcash_output(hc.date, hc.resource, hc.randomness, hc.counter) << std::endl;
 
     std::srand(std::time(0));
     if ( (hash[0] & 0xFFFFF000) != 0 ) {
-      hc.counter = (hc.counter == counter_max) ? 0 : std::min<size_t>(hc.counter + 1, counter_max);
-      std::cout << "Current counter : " << hc.counter << std::endl;
+      //hc.counter = (hc.counter == counter_max) ? 0 : std::min<size_t>(hc.counter + 1, counter_max);
+      ++hc.counter;
     } else {
       return;
     }
